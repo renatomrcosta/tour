@@ -9,7 +9,6 @@ import androidx.compose.ui.window.Notifier
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -22,13 +21,15 @@ fun main() =
         val timerState = timer.durationState
             .map(Duration::asString)
             .collectAsState("--:--")
-        val totalTime by remember { timerState }
-        var text by remember { mutableStateOf("Hello, World!") }
-        val notifier = Notifier()
 
-        // Setup a timer
-        // Count down time
-        // Send notify on finish
+        val statusState = timer.statusState
+            .map { it.toLabel() }
+            .collectAsState(timer.statusState.value.toLabel())
+
+        val timerLabel by remember { timerState }
+        val btnStartStopLabel by remember { statusState }
+
+        val notifier = Notifier()
 
         // Connect to firebase
         // Make sure timer updates firebase and vice versa, and stops when done
@@ -40,20 +41,31 @@ fun main() =
 
         MaterialTheme {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = totalTime)
-            }
-            Button(onClick = {
-                text = "Hello, Desktop!"
-                composableScope.launch {
-                    timer.start {
-                        notifier.notify(title="Timer has ended!", message="Next person in line iiiiss: Banana!")
+                Text(text = timerLabel)
+                Box(modifier= Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                    Button(
+                        onClick = {
+                            composableScope.launch {
+                                timer.start {
+                                    notifier.notify(
+                                        title = "Timer has ended!",
+                                        message = "Next person in line iiiiss: Banana!"
+                                    )
+                                }
+                            }
+                        }) {
+                        Text(btnStartStopLabel)
                     }
                 }
-            }) {
-                Text(text)
             }
         }
     }
+
+private fun TimerStatus.toLabel() = when(this) {
+    TimerStatus.STOPPED -> "Start"
+    TimerStatus.PAUSED -> "Continue"
+    TimerStatus.PLAYING -> "Pause"
+}
 
 
 fun Duration.asString(): String {
@@ -70,11 +82,11 @@ class Timer(private val duration: Duration = Duration.ofMinutes(12)) {
 
 
     private val statusMutex = Mutex()
-    private var _statusState = TimerStatus.STOPPED
-    val status get() = _statusState
+    private var _statusState = MutableStateFlow(TimerStatus.STOPPED)
+    val statusState:StateFlow<TimerStatus> get() = _statusState
 
     suspend fun start(onComplete: () -> Unit = {}) {
-        if(_statusState == TimerStatus.PLAYING) return
+        if(_statusState.value == TimerStatus.PLAYING) return
         resetDuration()
         changeStatus(TimerStatus.PLAYING)
         do {
@@ -93,7 +105,7 @@ class Timer(private val duration: Duration = Duration.ofMinutes(12)) {
 
     private suspend fun changeStatus(newStatus: TimerStatus) {
         statusMutex.withLock {
-            _statusState = newStatus
+            _statusState.value = newStatus
         }
     }
 
