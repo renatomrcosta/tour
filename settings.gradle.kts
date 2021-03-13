@@ -7,4 +7,6 @@ pluginManagement {
     
 }
 rootProject.name = "tour"
-
+include("tour-common")
+include("tour-ui")
+include("tour-server")
