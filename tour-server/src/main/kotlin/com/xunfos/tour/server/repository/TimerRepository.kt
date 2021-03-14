@@ -9,7 +9,10 @@ import java.util.concurrent.ConcurrentMap
 @Repository
 class TimerRepository {
     private val inMemoryMap: ConcurrentMap<String, Timer> = ConcurrentHashMap()
-    init { inMemoryMap["test"] = Timer(Duration.ofSeconds(5)) }
+    init {
+        inMemoryMap["test"] = Timer(Duration.ofSeconds(5))
+        inMemoryMap["test2"] = Timer(Duration.ofSeconds(65))
+    }
 
     // TODO - consider not overwriting existing timers
     fun addTimer(timerId: String, timer: Timer) { inMemoryMap[timerId] = timer }

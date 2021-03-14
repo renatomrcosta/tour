@@ -9,6 +9,7 @@ class Timer(private val duration: Duration = DEFAULT_DURATION) {
     private val _state: MutableStateFlow<TimerState> = MutableStateFlow(TimerState(duration, TimerStatus.STOPPED))
     val state: StateFlow<TimerState> get() = _state
 
+    // Probably I could have a flow with a delay, instead of a do while()
     suspend fun start(onComplete: () -> Unit = {}) {
         if (state.value.status == TimerStatus.PLAYING) return
         resetDuration()
@@ -17,8 +18,20 @@ class Timer(private val duration: Duration = DEFAULT_DURATION) {
             wait()
             decreaseSecond()
         } while (state.value.duration != Duration.ZERO)
-        changeStatus(TimerStatus.STOPPED)
+        changeStatus(TimerStatus.FINISHED)
         onComplete()
+    }
+
+    suspend fun togglePauseOrResume() {
+        _state.value = when(state.value.status) {
+            TimerStatus.STOPPED,
+            TimerStatus.FINISHED -> {
+                start()
+                state.value
+            }
+            TimerStatus.PAUSED -> state.value.copy(status = TimerStatus.PLAYING)
+            TimerStatus.PLAYING -> state.value.copy(status = TimerStatus.PAUSED)
+        }
     }
 
     private suspend fun wait() = delay(1_000)
@@ -32,7 +45,8 @@ class Timer(private val duration: Duration = DEFAULT_DURATION) {
     }
 
     private fun decreaseSecond() {
-        _state.value = state.value.copy(duration = state.value.duration.minusSeconds(1))
+        if (state.value.status == TimerStatus.PLAYING)
+            _state.value = state.value.copy(duration = state.value.duration.minusSeconds(1))
     }
 
     companion object {
