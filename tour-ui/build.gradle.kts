@@ -2,11 +2,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.compose.compose
 
 plugins {
-    id("org.springframework.boot") version "2.4.3"
-    id("io.spring.dependency-management") version "1.0.11.RELEASE"
-    kotlin("plugin.spring") version "1.4.30"
-    kotlin("jvm") version "1.4.20"
-    id("org.jetbrains.compose") version "0.2.0-build132"
+    id("org.springframework.boot")
+    id("io.spring.dependency-management")
+    kotlin("plugin.spring")
+    kotlin("jvm")
+    id("org.jetbrains.compose") version "0.3.0"
 }
 
 repositories {
@@ -34,14 +34,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "MainKt"
-        nativeDistributions {
-            targetFormats(
-                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg,
-                org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb
-            )
-            packageName = "ui"
-        }
+        mainClass = "com.xunfos.tour.ui.MainKt"
     }
 }
 tasks.test {

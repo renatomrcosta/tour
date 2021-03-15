@@ -13,7 +13,6 @@ import java.time.Duration
 import com.xunfos.tour.common.timer.TimerStatus
 import kotlinx.coroutines.flow.*
 
-
 fun main() = Window(title="tour stopwatch") {
 
     val notifier = Notifier()
