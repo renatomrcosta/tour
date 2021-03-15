@@ -1,12 +1,13 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.compose.compose
+import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 
 plugins {
     id("org.springframework.boot")
     id("io.spring.dependency-management")
     kotlin("plugin.spring")
     kotlin("jvm")
-    id("org.jetbrains.compose") version "0.3.0"
+    id("org.jetbrains.compose") version "0.3.2"
 }
 
 repositories {
@@ -35,6 +36,11 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "com.xunfos.tour.ui.MainKt"
+        nativeDistributions {
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi)
+            packageName = "tour-ui"
+            packageVersion = "1.0.0"
+        }
     }
 }
 tasks.test {
