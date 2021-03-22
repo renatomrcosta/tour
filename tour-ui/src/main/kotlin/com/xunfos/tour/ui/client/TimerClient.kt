@@ -19,7 +19,6 @@ class TimerClient {
         }
         .dataMimeType(MimeTypeUtils.APPLICATION_JSON)
         .tcp("localhost", 9090)
-//        .tcp("4.tcp.eu.ngrok.io", 19424)
 
     fun connectToRemoteTimer(id: String) =
         requestBuilder
