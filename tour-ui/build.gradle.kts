@@ -18,6 +18,7 @@ repositories {
 
 dependencies {
     implementation(project(":tour-common"))
+    implementation("uk.co.caprica:vlcj:4.7.0")
 
     implementation("org.springframework.boot:spring-boot-starter-rsocket")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")

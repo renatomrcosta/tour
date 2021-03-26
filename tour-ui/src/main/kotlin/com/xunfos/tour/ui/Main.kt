@@ -1,94 +1,135 @@
 package com.xunfos.tour.ui
 
 import androidx.compose.desktop.Window
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Text
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.window.Notifier
-import com.xunfos.tour.ui.client.TimerClient
-import kotlinx.coroutines.launch
-import java.time.Duration
 import com.xunfos.tour.common.timer.TimerStatus
-import kotlinx.coroutines.flow.*
+import com.xunfos.tour.ui.client.TimerClient
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
+import java.time.Duration
 
-fun main() = Window(title="tour stopwatch") {
+fun getAlarmPathOrNull(): String? = {}.javaClass.classLoader.getResource("bell.mp3")?.path
 
-    val notifier = Notifier()
-    println("Does this log anything?")
-    var timerId by remember { mutableStateOf("test") }
-    var timerTemp by remember { mutableStateOf("test") }
-    var minutes by remember { mutableStateOf("12") }
 
+
+fun main() {
+    val audioPlayer = AudioPlayerComponent()
+    val alarmAudio = getAlarmPathOrNull()
     val timerClient = TimerClient()
-    var remoteTimerState = timerClient.connectToRemoteTimer(id = timerId)
+    val notifier = Notifier()
 
-    val labelState = remoteTimerState
-        .map { it.duration.asString() }
-        .collectAsState("--:--")
+    Window(title = "tour stopwatch") {
+        val composableScope = rememberCoroutineScope()
 
-    val buttonState = remoteTimerState
-        .map { it.status.toLabel() }
-        .collectAsState("--")
+        var timerId by remember { mutableStateOf("test") }
+        var timerTemp by remember { mutableStateOf("test") }
+        var minutes by remember { mutableStateOf("12") }
 
-    val timerLabel by remember { labelState }
-    val buttonLabel by remember { buttonState }
+        var remoteTimerState = timerClient.connectToRemoteTimer(id = timerId)
 
-    val composableScope = rememberCoroutineScope()
+        val labelState = remoteTimerState
+            ?.map { it.duration.asString() }
+            ?.collectAsState("--:--")
+            ?: mutableStateOf("connection error")
 
-    composableScope.launch {
-        remoteTimerState.map { it.status }
-            .filter { it == TimerStatus.FINISHED }
-            .collect {
-            notifier.notify(title = "Time's up!", message = "Time to switch driver!")
-        }
-    }
+        val timerLabel by remember { labelState }
 
-    MaterialTheme {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter){
-            Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                OutlinedTextField(
-                    value = timerTemp,
-                    label = { Text("timer: ") },
-                    onValueChange = { timerTemp = it }
-                )
-                Button(onClick = {
-                    timerId = timerTemp
-//                    remoteTimerState = timerClient.connectToRemoteTimer(id = timerTemp)
-                }) {
-                    Text("Join remote timer")
-                }
-            }
-        }
+        val buttonState = remoteTimerState
+            ?.map { it.status.toLabel() }
+            ?.collectAsState("--")
+            ?: mutableStateOf("connection error")
 
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column {
-                Text(text = timerLabel)
-                Button(onClick = {
-                    composableScope.launch {
-                        timerClient.toggleTimerState(timerId)
+        val buttonLabel by remember { buttonState }
+
+        composableScope.launch {
+            remoteTimerState?.let { state ->
+                state.map { it.status }
+                    .filter { it == TimerStatus.FINISHED }
+                    .collect {
+                        launch { notifier.notify(title = "Time's up!", message = "Time to switch driver!") }
+                        launch { alarmAudio?.let { audioPlayer.mediaPlayer().media().play(alarmAudio) } }
                     }
-                }) {
-                    Text(buttonLabel)
-                }
             }
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        }
+
+        MaterialTheme {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                 Row(horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                     OutlinedTextField(
-                        value = minutes,
-                        label = { Text("Minutes in timer: ") },
-                        onValueChange = { minutes = it }
+                        value = timerTemp,
+                        label = { Text("timer: ") },
+                        onValueChange = { timerTemp = it }
                     )
+                    Button(onClick = {
+                        timerId = timerTemp
+                    }) {
+                        Text("Join remote timer")
+                    }
+                }
+            }
 
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column {
+                    Text(text = timerLabel)
                     Button(onClick = {
                         composableScope.launch {
-                            timerTemp = timerClient.createRemoteTimer(minutes.toLong())
-                            timerId = timerTemp
-//                            remoteTimerState = timerClient.connectToRemoteTimer(id = timerTemp)
+                            timerClient.toggleTimerState(timerId)
                         }
                     }) {
-                        Text("Create remote timer")
+                        Text(buttonLabel)
+                    }
+                }
+
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+//                        Button(onClick = {
+//                            composableScope.launch {
+//                                val temp = timerId
+//                                timerId = ""
+//                                timerId = temp
+//                            }
+//                        }) {
+//                            Text("Reconnect to Server")
+//                        }
+
+                        OutlinedTextField(
+                            value = minutes,
+                            label = { Text("Minutes in timer: ") },
+                            onValueChange = { minutes = it }
+                        )
+
+                        Button(onClick = {
+                            composableScope.launch {
+                                timerTemp = timerClient.createRemoteTimer(minutes.toLong())
+                                timerId = timerTemp
+                            }
+                        }) {
+                            Text("Create remote timer")
+                        }
                     }
                 }
             }
