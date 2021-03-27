@@ -1,12 +1,7 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     kotlin("jvm")
 }
-
-repositories {
-    mavenCentral()
-}
+java.targetCompatibility = JavaVersion.VERSION_11
 
 dependencies {
     implementation(kotlin("stdlib"))
