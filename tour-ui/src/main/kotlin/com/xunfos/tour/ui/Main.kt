@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import uk.co.caprica.vlcj.player.component.AudioPlayerComponent
 import java.time.Duration
 
@@ -46,7 +45,7 @@ fun main() {
         var timerTemp by remember { mutableStateOf("test") }
         var minutes by remember { mutableStateOf("12") }
 
-        var remoteTimerState = timerClient.connectToRemoteTimer(id = timerId)
+        var remoteTimerState = timerClient.connectToRemoteTimer(timerId = timerId)
 
         val labelState = remoteTimerState
             ?.map { it.duration.asString() }
@@ -92,12 +91,21 @@ fun main() {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column {
                     Text(text = timerLabel)
-                    Button(onClick = {
-                        composableScope.launch {
-                            timerClient.toggleTimerState(timerId)
+                    Row {
+                        Button(onClick = {
+                            composableScope.launch {
+                                timerClient.toggleTimerState(timerId)
+                            }
+                        }) {
+                            Text(buttonLabel)
                         }
-                    }) {
-                        Text(buttonLabel)
+                        Button(onClick = {
+                            composableScope.launch {
+                                timerClient.reset(timerId)
+                            }
+                        }) {
+                            Text("Reset")
+                        }
                     }
                 }
 

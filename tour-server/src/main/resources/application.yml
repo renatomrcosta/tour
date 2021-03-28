@@ -1,0 +1,9 @@
+spring:
+  rsocket:
+    server:
+      transport: websocket
+      mapping-path: /rs
+      port: 9999
+server:
+  port: ${PORT:8080}
+

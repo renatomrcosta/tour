@@ -49,6 +49,10 @@ class Timer(private val duration: Duration = DEFAULT_DURATION) {
             _state.value = state.value.copy(duration = state.value.duration.minusSeconds(1))
     }
 
+    fun reset() {
+        resetDuration()
+    }
+
     companion object {
         val DEFAULT_DURATION: Duration = Duration.ofMinutes(12)
     }

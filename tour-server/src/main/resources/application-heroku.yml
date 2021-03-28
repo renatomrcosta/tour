@@ -1,0 +1,11 @@
+spring:
+  rsocket:
+    server:
+      transport: websocket
+      mapping-path: /rs
+      port: ${PORT:8080}
+  devtools:
+    add-properties: false
+server:
+  port: 9999 #we don't really use the WEB port in heroku
+

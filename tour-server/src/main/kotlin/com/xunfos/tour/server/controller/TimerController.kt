@@ -4,11 +4,9 @@ import com.xunfos.tour.server.repository.TimerRepository
 import com.xunfos.tour.common.timer.Timer;
 import com.xunfos.tour.common.timer.TimerState;
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.StateFlow
 import org.springframework.messaging.handler.annotation.MessageMapping
 import org.springframework.stereotype.Controller
 import java.time.Duration
-import kotlin.random.nextUInt
 
 @Controller
 class TimerController(private val timerRepository: TimerRepository) {
@@ -22,6 +20,12 @@ class TimerController(private val timerRepository: TimerRepository) {
     suspend fun start(timerId: String) {
         val timer = timerRepository.getTimerOrNull(timerId) ?: error("failed to find timer")
         timer.start()
+    }
+
+    @MessageMapping("reset")
+    suspend fun reset(timerId: String) {
+        val timer = timerRepository.getTimerOrNull(timerId) ?: error("failed to find timer")
+        timer.reset()
     }
 
     @MessageMapping("toggle")

@@ -11,6 +11,8 @@ plugins {
 
 dependencies {
     implementation(project(":tour-common"))
+    implementation("org.jetbrains.kotlinx:kotlinx-collections-immutable-jvm:0.3.3")
+
     implementation("uk.co.caprica:vlcj:4.7.0")
 
     implementation("org.springframework.boot:spring-boot-starter-rsocket")
@@ -39,4 +41,7 @@ compose.desktop {
 }
 tasks.test {
     useJUnitPlatform()
+}
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions.jvmTarget = "15"
 }

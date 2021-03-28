@@ -2,7 +2,6 @@ package com.xunfos.tour.ui.client
 
 import com.xunfos.tour.common.timer.TimerState
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import org.springframework.http.codec.json.Jackson2JsonDecoder
 import org.springframework.http.codec.json.Jackson2JsonEncoder
@@ -13,7 +12,7 @@ import org.springframework.messaging.rsocket.retrieveFlow
 import org.springframework.messaging.rsocket.sendAndAwait
 import org.springframework.util.MimeTypeUtils
 import java.lang.Exception
-import java.net.ConnectException
+import java.net.URI
 
 class TimerClient {
     private val requestBuilder = RSocketRequester.builder()
@@ -22,13 +21,15 @@ class TimerClient {
             it.decoders { it.add(Jackson2JsonDecoder()) }
         }
         .dataMimeType(MimeTypeUtils.APPLICATION_JSON)
-        .tcp("localhost", 9090)
+        .websocket(URI.create("wss://tour-server.herokuapp.com/rs/"))
+//        .websocket(URI.create("ws://localhost:8080/rs/"))
+//        .tcp("localhost", 8080)
 
     // TODO - make it suspend so exceptions aren't throwing on main
-    fun connectToRemoteTimer(id: String) = try {
+    fun connectToRemoteTimer(timerId: String) = try {
         requestBuilder
             .route("track")
-            .data(id)
+            .data(timerId)
             .retrieveFlow<TimerState>()
     } catch (e: Exception) {
         null
@@ -41,17 +42,24 @@ class TimerClient {
             .retrieveAndAwait<String>()
     }
 
-    suspend fun toggleTimerState(id: String) = withContext(Dispatchers.IO) {
+    suspend fun toggleTimerState(timerId: String) = withContext(Dispatchers.IO) {
         requestBuilder
             .route("toggle")
-            .data(id)
+            .data(timerId)
             .sendAndAwait()
     }
 
-    suspend fun deleteTimer(id: String) = withContext(Dispatchers.IO) {
+    suspend fun deleteTimer(timerId: String) = withContext(Dispatchers.IO) {
         requestBuilder
             .route("delete")
-            .data(id)
+            .data(timerId)
+            .sendAndAwait()
+    }
+
+    suspend fun reset(timerId: String) = withContext(Dispatchers.IO){
+        requestBuilder
+            .route("reset")
+            .data(timerId)
             .sendAndAwait()
     }
 }
