@@ -1,0 +1,21 @@
+<idea-plugin>
+    <id>tour-shared-stopwatch</id>
+    <name>Shared Stopwatch</name>
+    <vendor email="chunfos@gmail.com" url="https://github.com/renatomrcosta">Renato R. Costa</vendor>
+
+    <description><![CDATA[
+        Shared stopwatch for discussions / pairings
+    ]]></description>
+
+    <!-- please see https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html
+         on how to target different products -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Add your extensions here -->
+    </extensions>
+
+    <actions>
+        <!-- Add your actions here -->
+    </actions>
+</idea-plugin>
